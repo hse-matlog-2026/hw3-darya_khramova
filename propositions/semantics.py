@@ -65,29 +65,32 @@ def evaluate(formula: Formula, model: Model) -> bool:
     assert is_model(model)
     assert formula.variables().issubset(variables(model))
     if is_constant(formula.root):
-        return formula.root == 'T'
-    if is_variable(formula.root):
+        if formula.root =='T':
+            return True
+        elif formula.root == 'F':
+            return False
+    elif is_variable(formula.root):
         return model[formula.root]
-    if is_unary(formula.root):
-        return not evaluate(formula.first, model)
-    assert is_binary(formula.root)
-    first_value = evaluate(formula.first, model)
-    second_value = evaluate(formula.second, model)
-    if formula.root == '&':
-        return first_value and second_value
-    if formula.root == '|':
-        return first_value or second_value
-    if formula.root == '->':
-        return (not first_value) or second_value
-    if formula.root == '+':
-        return first_value != second_value
-    if formula.root == '<->':
-        return first_value == second_value
-    if formula.root == '-&':
-        return not (first_value and second_value)
-    if formula.root == '-|':
-        return not (first_value or second_value)
-    raise ValueError('Unknown operator: ' + formula.root)
+    elif is_unary(formula.root):
+        return (not evaluate(formula.first, model))
+    elif is_binary(formula.root):
+        if formula.root == '&':
+            return evaluate(formula.first, model) and evaluate(formula.second, model)
+        elif formula.root == '|':
+            return evaluate(formula.first, model) or evaluate(formula.second, model)
+        elif formula.root == '->':
+            if evaluate(formula.first, model) == True and evaluate(formula.second, model) == False:
+                return False
+            else:
+                return True
+        elif formula.root == '+':
+            return evaluate(formula.first, model) ^ evaluate(formula.second, model)
+        elif formula.root == '<->':
+            return not (evaluate(formula.first, model) ^ evaluate(formula.second, model))
+        elif formula.root == '-&':
+            return not (evaluate(formula.first, model) and evaluate(formula.second, model))
+        elif formula.root == '-|':
+            return not (evaluate(formula.first, model) or evaluate(formula.second, model))
 
 def all_models(variables: Sequence[str]) -> Iterable[Model]:
     """Calculates all possible models over the given variable names.
